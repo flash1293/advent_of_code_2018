@@ -23,7 +23,7 @@ solve = reverse . solve' ""
         deleteStartingNodeFromVals currentGraph =
           M.map (filter (/= startingNode)) currentGraph
         deleteStartingNode currentGraph = M.delete startingNode currentGraph
-        hasStartingNode = (/= 0) $ length $ startingNodes
+        hasStartingNode = length startingNodes /= 0
         startingNode = head startingNodes
         startingNodes = sort $ map fst $ filter ((== "") . snd) (M.toList graph)
 
