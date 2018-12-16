@@ -1,6 +1,6 @@
 import           Data.Bits          ((.&.), (.|.))
 import           Data.Foldable      (toList)
-import           Data.List          (findIndices, find, sort, group)
+import           Data.List          (findIndices, find, findIndex, sort, group, sortBy)
 import           Data.List.Split    (splitOneOf)
 import           Data.Maybe         (fromJust, fromMaybe, isJust)
 import qualified Data.Sequence      as S
@@ -29,14 +29,18 @@ execute :: [Int] ->  S.Seq Int -> [Int] -> S.Seq Int
 execute opMapping mem [op, a, b, c] = (ops !! (opMapping !! op)) mem (a, b, c)
 
 buildMapping :: M.Map Int [Int] -> [Int]
-buildMapping rules = work [] [0..15]
+-- TODO clean up this mess of remapping
+buildMapping rules = map (\i -> fromJust (mappingResult S.!? (fromJust (findIndex (== i) (toList priorityList))))) [0..15]
   where
+    mappingResult = S.fromList $ work [] [0..15]
+    -- build tree with low-number of branches per level first to minimize search space (needs to be remapped before returning)
+    priorityList = S.fromList $ map fst $ sortBy (\(_, slots1) (_, slots2) -> (length slots1) `compare` (length slots2) ) $ M.toList rules
     -- depth-first backtracking search of op-code permutation confirmed by samples - doesn't guess (requires at least one sample per op)
     work :: [Int] -> [Int] -> [Int]
     work foundMappings [] = foundMappings
     work foundMappings unmappedSlots = fromMaybe foundMappings $ find ((== 16) . length) possibilities
       where
-        opToMap = length foundMappings
+        opToMap = fromJust $ priorityList S.!? (length foundMappings)
         possibilities = map (\slotToFill -> work (foundMappings ++ [slotToFill]) (filter (/= slotToFill) unmappedSlots) ) $ filter inRules unmappedSlots
         inRules slot = isJust $ find (== slot) (fromMaybe [] $ M.lookup opToMap rules)
 
