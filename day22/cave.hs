@@ -26,7 +26,7 @@ getRiskMap depth (targetX, targetY) = M.map getRisk erosionMap
             | x == 0 = y * 48271
             | otherwise = (m M.! (x-1, y)) * (m M.! (x,y-1))
         toErosionLevel geoIndex = (geoIndex + depth) `mod` 20183
-        erosionMap = foldl getErosions M.empty [(x, y) | x <- [0..(targetX + 300)], y <- [0..(targetY + 300)]]
+        erosionMap = foldl getErosions M.empty [(x, y) | x <- [0..(targetX + 30)], y <- [0..(targetY + 30)]]
         getRisk = (`mod` 3) 
 
 -- risk 0: rocky
