@@ -17,7 +17,7 @@ main = do
   strs <- lines <$> readFile path
   let program = parseProgram strs
   -- part A
-  print $ evaluate program (read ip) (A.listArray (0,5) $ take 6 $ repeat 0, S.empty)
+  print $ evaluate (A.listArray (0,length program) program) (read ip) (A.listArray (0,5) $ take 6 $ repeat 0, S.empty)
   -- part B (theoretically - real solution was found manually by inspecting the algorithm)
   -- print $ evaluate program (read ip) 0 (A.listArray (0,5) $ ((1 :) $ take 5 $ repeat 0))
 
@@ -27,11 +27,11 @@ parseProgram = map (parseInstruction . splitOneOf " ")
         parseInstruction (opName : params) = (fromJust (M.lookup opName ops), map read params)
         parseInstruction _ = error "invalid instructions"
 
-evaluate :: [(VMOp, [Int])] -> Int -> (A.Array Int Int, S.Set (Int)) -> (A.Array Int Int, S.Set (Int))
+evaluate :: A.Array Int (VMOp, [Int]) -> Int -> (A.Array Int Int, S.Set (Int)) -> (A.Array Int Int, S.Set (Int))
 evaluate program ipReg (mem, haltingStates) = if newIpOOB || isStateLooped then (newMem, S.empty) else (evaluate program ipReg (newMem A.// [(ipReg, newIp)], newHaltingStates))
     where
         ip = mem A.! ipReg
-        (currentOp, [a, b, c]) = program !! ip
+        (currentOp, [a, b, c]) = program A.! ip
         newMem = (currentOp mem (a, b, c))
         newIp = (+1) $ newMem A.! ipReg
         newHaltingStates = if newIp == 28 then (newMem A.! 4) `S.insert` haltingStates else haltingStates
